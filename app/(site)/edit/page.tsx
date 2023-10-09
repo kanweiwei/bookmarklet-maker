@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { minify } from "@/lib/uglify";
-import { produce } from "immer";
 import { X } from "lucide-react";
 import { nanoid } from "nanoid";
 import { ChangeEventHandler, useCallback, useEffect, useState } from "react";
@@ -48,33 +47,29 @@ export default function Page() {
   );
 
   const handleCreate = useCallback(() => {
-    setBookmarklets(
-      produce((draft) => {
-        draft?.push({
-          uid: nanoid(),
-          code: `javascript:(function(){${encodeURIComponent(
-            uglifiedCode || ""
-          )}})()`,
-          name,
-          originCode: JSON.stringify(code),
-        });
-      })
-    );
-  }, [code, name, setBookmarklets, uglifiedCode]);
+    const arr = bookmarklets?.slice() || [];
+    arr.push({
+      uid: nanoid(),
+      code: `javascript:(function(){${encodeURIComponent(
+        uglifiedCode || ""
+      )}})()`,
+      name,
+      originCode: JSON.stringify(code),
+    });
+    setBookmarklets(arr);
+    console.log(arr);
+  }, [bookmarklets, code, name, setBookmarklets, uglifiedCode]);
 
   const handleDelete = useCallback(
     (n: Bookmarklet) => {
-      setBookmarklets(
-        produce((draft) => {
-          if (!draft) return;
-          const idx = draft?.findIndex((item) => item.uid == n.uid);
-          if (idx > -1) {
-            draft?.splice(idx);
-          }
-        })
-      );
+      const arr = bookmarklets?.slice() || [];
+      const idx = arr.findIndex((item) => item.uid == n.uid);
+      if (idx > -1) {
+        arr.splice(idx, 1);
+      }
+      setBookmarklets(arr);
     },
-    [setBookmarklets]
+    [bookmarklets, setBookmarklets]
   );
 
   useEffect(() => {
@@ -141,7 +136,7 @@ export default function Page() {
                 ))}
               {bookmarklets?.map((n) => {
                 return (
-                  <div className="flex space-x-2" key={n.uid}>
+                  <div className="flex space-x-2 mt-2" key={n.uid}>
                     <a
                       className="bg-teal-700 text-white text-base px-2 cursor-move rounded-sm shadow-sm"
                       href={n.code}
